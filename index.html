@@ -1,0 +1,646 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>2016-07 Cool Stuff</title><meta name="author" content="Jim Moore"><meta name="generator" content="Asciidoctor 1.5.4 (Bespoke.js converter)"><meta name="mobile-web-app-capable" content="yes"><link rel="stylesheet" href="build/build.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css"></head><body><article class="deck"><section class="title" data-title=""><h1>2016-07 Cool Stuff</h1><p>Some of the interesting things I&#8217;ve been playing with lately</p>
+<div class="smaller"><p>Created by <a href="https://github.com/jdigger/">Jim Moore</a></p>
+<p><a href="https://keybase.io/jmoore">keybase.io/jmoore</a> / <a href="http://twitter.com/jdiggerj">@jdiggerj</a></p></div>
+<br/><br/><div class="content" style="display: flex; text-align: center;"><p style="font-size: 0.6em"><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">2016-07 Cool Stuff</span> by <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Jim J. Moore</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.<br />Presentation source at <a xmlns:dct="http://purl.org/dc/terms/" href="https://github.com/jdigger/201607-cool-stuff-preso" rel="dct:source">https://github.com/jdigger/201607-cool-stuff-preso</a></p></div><footer><p class="author"><span class="personname"><span class="firstname">Jim</span> <span class="surname">Moore</span></span><span class="contact"><span class="twitter">@jdiggerj</span> </span></p></footer></section>
+<section><h2>Agenda</h2><ol class="toc"><li><span class="primary">Capsule</span></li><li><span class="primary">Lombok</span></li><li><span class="primary">JDK 8</span><ul><li><span class="primary">Streams &amp; Lambdas</span></li><li><span class="primary">Where&#8217;s Elvis? <code>?:</code></span></li><li><span class="primary">Misc</span></li></ul></li><li><span class="primary">Softened Throws</span></li><li><span class="primary">Either</span></li><li><span class="primary">Checker Framework</span></li><li><span class="primary">Reactive Streams</span></li><li><span class="primary">AsciiDoclet</span></li><li><span class="primary">Typed Builders</span></li><li><span class="primary">Static Analysis</span></li></ol></section>
+<section><h2>Examples</h2><p>To see these used &#8220;for reals&#8221;, please refer to
+<a href="https://github.com/TWCable/grabbit-cli/tree/v2.0.1">the Grabbit CLI</a></p></section>
+<section><h2>Capsule</h2></section>
+<section><figure class="image fullheight"><img src="images/capsule.png" alt="capsule"></figure></section>
+<section><div class="em08"><pre class="source"><code data-lang="groovy" class="language-groovy prettyprint"><span class="tok-n">plugins</span> <span class="tok-o">{</span>
+    <span class="tok-n">id</span> <span class="tok-s2">&quot;us.kirchmeier.capsule&quot;</span> <span class="tok-n">version</span> <span class="tok-s2">&quot;1.0.2&quot;</span>
+<span class="tok-o">}</span>
+
+<span class="tok-n">task</span> <span class="tok-nf">fatCapsule</span><span class="tok-o">(</span><span class="tok-nl">type:</span> <span class="tok-n">FatCapsule</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-n">archiveName</span> <span class="tok-o">=</span> <span class="tok-s2">&quot;grabbit-cli-${version}&quot;</span>
+    <span class="tok-n">applicationClass</span> <span class="tok-s2">&quot;com.twcable.grabbit.tools.cli.GrabbitCli&quot;</span>
+
+    <span class="tok-n">capsuleManifest</span> <span class="tok-o">{</span>
+        <span class="tok-n">minJavaVersion</span> <span class="tok-o">=</span> <span class="tok-n">defaults</span><span class="tok-o">.</span><span class="tok-na">compatibilityVersion</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-n">manifest</span> <span class="tok-o">=</span> <span class="tok-n">jar</span><span class="tok-o">.</span><span class="tok-na">manifest</span>
+    <span class="tok-n">reallyExecutable</span>
+<span class="tok-o">}</span>
+
+<span class="tok-n">assemble</span><span class="tok-o">.</span><span class="tok-na">dependsOn</span> <span class="tok-n">fatCapsule</span></code></pre></div></section>
+<section><h2>Capsule MANIFEST.MF</h2><pre class="source"><code data-lang="bash" class="language-bash prettyprint"><span class="tok-nv">$ </span>unzip -p build/libs/grabbit-cli-2.0.1 META-INF/MANIFEST.MF
+warning <span class="tok-o">[</span>build/libs/grabbit-cli-2.0.1<span class="tok-o">]</span>:  <span class="tok-m">34</span> extra bytes at
+beginning or within zipfile
+  <span class="tok-o">(</span>attempting to process anyway<span class="tok-o">)</span>
+Manifest-Version: 1.0
+Application-Class: com.twcable.grabbit.tools.cli.GrabbitCli
+Min-Java-Version: 1.8
+Premain-Class: Capsule
+Main-Class: Capsule</code></pre></section>
+<section><h2>First 34 Bytes</h2><pre class="source"><code data-lang="bash" class="language-bash prettyprint"><span class="tok-nv">$ </span>head -c34 build/libs/grabbit-cli-2.0.1
+<span class="tok-c">#!/bin/sh</span>
+
+<span class="tok-nb">exec </span>java -jar <span class="tok-nv">$0</span> <span class="tok-s2">&quot;$@&quot;</span></code></pre></section>
+<section><pre class="source"><code data-lang="bash" class="language-bash prettyprint"><span class="tok-nv">$ </span>unzip -l build/libs/grabbit-cli-2.0.1
+  Length     Date   Time    Name
+ --------    ----   ----    ----
+        <span class="tok-m">0</span>  07-08-16 09:26   META-INF/
+      <span class="tok-m">402</span>  07-08-16 09:26   META-INF/MANIFEST.MF
+   <span class="tok-m">166083</span>  10-07-15 15:12   Capsule.class
+    <span class="tok-m">73693</span>  07-08-16 09:26   grabbit-cli-2.0.1.jar
+    <span class="tok-m">52988</span>  05-29-16 18:44   commons-cli-1.3.1.jar
+   <span class="tok-m">273599</span>  05-30-16 06:26   snakeyaml-1.17.jar
+     <span class="tok-m">2042</span>  09-27-15 20:42   reactive-streams-1.0.0.jar
+   <span class="tok-m">995032</span>  06-28-16 12:25   reactor-core-2.5.0.M4.jar
+ --------                   -------
+  <span class="tok-m">1563839</span>                   <span class="tok-m">8</span> files</code></pre></section>
+<section><h2>Lombok</h2><p><a href="https://projectlombok.org/features/index.html" class="bare">https://projectlombok.org/features/index.html</a></p></section>
+<section><p><span class="image"><img src="images/Lombok_feature_overview.png" alt="Lombok feature overview" height="720"></span></p></section>
+<section><h2>@Value</h2><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-nd">@Value</span>
+<span class="tok-kd">public</span> <span class="tok-kd">class</span> <span class="tok-nc">HostAndJobIds</span> <span class="tok-o">{</span>
+    <span class="tok-n">URI</span> <span class="tok-n">uri</span><span class="tok-o">;</span>
+    <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIds</span><span class="tok-o">;</span>
+<span class="tok-o">}</span></code></pre></section>
+<section><div class="em04"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">class</span> <span class="tok-nc">HostAndJobIds</span> <span class="tok-o">{</span>
+    <span class="tok-n">URI</span> <span class="tok-n">uri</span><span class="tok-o">;</span>
+    <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIds</span><span class="tok-o">;</span>
+
+    <span class="tok-nd">@java.beans.ConstructorProperties</span><span class="tok-o">({</span><span class="tok-s">&quot;uri&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;jobIds&quot;</span><span class="tok-o">})</span>
+    <span class="tok-kd">public</span> <span class="tok-nf">HostAndJobIds</span><span class="tok-o">(</span><span class="tok-n">URI</span> <span class="tok-n">uri</span><span class="tok-o">,</span> <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIds</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">uri</span> <span class="tok-o">=</span> <span class="tok-n">uri</span><span class="tok-o">;</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobIds</span> <span class="tok-o">=</span> <span class="tok-n">jobIds</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-kd">public</span> <span class="tok-n">URI</span> <span class="tok-nf">uri</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+        <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">uri</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-kd">public</span> <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-nf">jobIds</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+        <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobIds</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-kd">public</span> <span class="tok-kt">boolean</span> <span class="tok-nf">equals</span><span class="tok-o">(</span><span class="tok-n">Object</span> <span class="tok-n">o</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">o</span> <span class="tok-o">==</span> <span class="tok-k">this</span><span class="tok-o">)</span> <span class="tok-k">return</span> <span class="tok-kc">true</span><span class="tok-o">;</span>
+        <span class="tok-k">if</span> <span class="tok-o">(!(</span><span class="tok-n">o</span> <span class="tok-k">instanceof</span> <span class="tok-n">HostAndJobIds</span><span class="tok-o">))</span> <span class="tok-k">return</span> <span class="tok-kc">false</span><span class="tok-o">;</span>
+        <span class="tok-kd">final</span> <span class="tok-n">HostAndJobIds</span> <span class="tok-n">other</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">HostAndJobIds</span><span class="tok-o">)</span><span class="tok-n">o</span><span class="tok-o">;</span>
+        <span class="tok-kd">final</span> <span class="tok-n">Object</span> <span class="tok-k">this</span><span class="tok-n">$uri</span> <span class="tok-o">=</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">uri</span><span class="tok-o">;</span>
+        <span class="tok-kd">final</span> <span class="tok-n">Object</span> <span class="tok-n">other$uri</span> <span class="tok-o">=</span> <span class="tok-n">other</span><span class="tok-o">.</span><span class="tok-na">uri</span><span class="tok-o">;</span>
+        <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-k">this</span><span class="tok-n">$uri</span> <span class="tok-o">==</span> <span class="tok-kc">null</span> <span class="tok-o">?</span> <span class="tok-n">other$uri</span> <span class="tok-o">!=</span> <span class="tok-kc">null</span> <span class="tok-o">:</span>
+            <span class="tok-o">!</span><span class="tok-k">this</span><span class="tok-n">$uri</span><span class="tok-o">.</span><span class="tok-na">equals</span><span class="tok-o">(</span><span class="tok-n">other$uri</span><span class="tok-o">))</span> <span class="tok-k">return</span> <span class="tok-kc">false</span><span class="tok-o">;</span>
+        <span class="tok-kd">final</span> <span class="tok-n">Object</span> <span class="tok-k">this</span><span class="tok-n">$jobIds</span> <span class="tok-o">=</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobIds</span><span class="tok-o">;</span>
+        <span class="tok-kd">final</span> <span class="tok-n">Object</span> <span class="tok-n">other$jobIds</span> <span class="tok-o">=</span> <span class="tok-n">other</span><span class="tok-o">.</span><span class="tok-na">jobIds</span><span class="tok-o">;</span>
+        <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-k">this</span><span class="tok-n">$jobIds</span> <span class="tok-o">==</span> <span class="tok-kc">null</span> <span class="tok-o">?</span> <span class="tok-n">other$jobIds</span> <span class="tok-o">!=</span> <span class="tok-kc">null</span> <span class="tok-o">:</span>
+            <span class="tok-o">!</span><span class="tok-k">this</span><span class="tok-n">$jobIds</span><span class="tok-o">.</span><span class="tok-na">equals</span><span class="tok-o">(</span><span class="tok-n">other$jobIds</span><span class="tok-o">))</span> <span class="tok-k">return</span> <span class="tok-kc">false</span><span class="tok-o">;</span>
+        <span class="tok-k">return</span> <span class="tok-kc">true</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-kd">public</span> <span class="tok-kt">int</span> <span class="tok-nf">hashCode</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+        <span class="tok-kd">final</span> <span class="tok-kt">int</span> <span class="tok-n">PRIME</span> <span class="tok-o">=</span> <span class="tok-mi">59</span><span class="tok-o">;</span>
+        <span class="tok-kt">int</span> <span class="tok-n">result</span> <span class="tok-o">=</span> <span class="tok-mi">1</span><span class="tok-o">;</span>
+        <span class="tok-kd">final</span> <span class="tok-n">Object</span> <span class="tok-n">$uri</span> <span class="tok-o">=</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">uri</span><span class="tok-o">;</span>
+        <span class="tok-n">result</span> <span class="tok-o">=</span> <span class="tok-n">result</span> <span class="tok-o">*</span> <span class="tok-n">PRIME</span> <span class="tok-o">+</span> <span class="tok-o">(</span><span class="tok-n">$uri</span> <span class="tok-o">==</span> <span class="tok-kc">null</span> <span class="tok-o">?</span> <span class="tok-mi">0</span> <span class="tok-o">:</span> <span class="tok-n">$uri</span><span class="tok-o">.</span><span class="tok-na">hashCode</span><span class="tok-o">());</span>
+        <span class="tok-kd">final</span> <span class="tok-n">Object</span> <span class="tok-n">$jobIds</span> <span class="tok-o">=</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobIds</span><span class="tok-o">;</span>
+        <span class="tok-n">result</span> <span class="tok-o">=</span> <span class="tok-n">result</span> <span class="tok-o">*</span> <span class="tok-n">PRIME</span> <span class="tok-o">+</span> <span class="tok-o">(</span><span class="tok-n">$jobIds</span> <span class="tok-o">==</span> <span class="tok-kc">null</span> <span class="tok-o">?</span> <span class="tok-mi">0</span> <span class="tok-o">:</span> <span class="tok-n">$jobIds</span><span class="tok-o">.</span><span class="tok-na">hashCode</span><span class="tok-o">());</span>
+        <span class="tok-k">return</span> <span class="tok-n">result</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-kd">public</span> <span class="tok-n">String</span> <span class="tok-nf">toString</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+        <span class="tok-k">return</span> <span class="tok-s">&quot;com.twcable.grabbit.tools.jobstarter.HostAndJobIds(uri=&quot;</span> <span class="tok-o">+</span>
+            <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">uri</span> <span class="tok-o">+</span> <span class="tok-s">&quot;, jobIds=&quot;</span> <span class="tok-o">+</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobIds</span> <span class="tok-o">+</span> <span class="tok-s">&quot;)&quot;</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><p><span class="image"><img src="images/delombok.png" alt="delombok" height="720"></span></p></section>
+<section><h2>Lombok val</h2><div class="em065"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-n">JobStatus</span> <span class="tok-nf">fromJson</span><span class="tok-o">(</span><span class="tok-n">URI</span> <span class="tok-n">uri</span><span class="tok-o">,</span> <span class="tok-nd">@Nullable</span> <span class="tok-n">String</span> <span class="tok-n">jsonStr</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-n">val</span> <span class="tok-n">json</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">jsonStr</span> <span class="tok-o">==</span> <span class="tok-kc">null</span> <span class="tok-o">||</span> <span class="tok-n">jsonStr</span><span class="tok-o">.</span><span class="tok-na">trim</span><span class="tok-o">().</span><span class="tok-na">isEmpty</span><span class="tok-o">())</span> <span class="tok-o">?</span> <span class="tok-s">&quot;{}&quot;</span> <span class="tok-o">:</span> <span class="tok-n">jsonStr</span><span class="tok-o">;</span>
+
+    <span class="tok-n">val</span> <span class="tok-n">map</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">Map</span><span class="tok-o">&lt;</span><span class="tok-n">String</span><span class="tok-o">,</span> <span class="tok-n">Object</span><span class="tok-o">&gt;)</span><span class="tok-k">new</span> <span class="tok-nf">Yaml</span><span class="tok-o">().</span><span class="tok-na">loadAs</span><span class="tok-o">(</span><span class="tok-n">json</span><span class="tok-o">,</span> <span class="tok-n">Map</span><span class="tok-o">.</span><span class="tok-na">class</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">transactionId</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">Long</span><span class="tok-o">)</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;transactionID&quot;</span><span class="tok-o">,</span> <span class="tok-o">-</span><span class="tok-mi">1L</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">jobExecutionId</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">Long</span><span class="tok-o">)</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;jobExecutionId&quot;</span><span class="tok-o">,</span> <span class="tok-o">-</span><span class="tok-mi">1L</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">startTimeStr</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;startTime&quot;</span><span class="tok-o">,</span> <span class="tok-n">DATE_TIME_FORMATTER</span><span class="tok-o">.</span><span class="tok-na">format</span><span class="tok-o">(</span><span class="tok-n">now</span><span class="tok-o">()));</span>
+    <span class="tok-n">val</span> <span class="tok-n">startTime</span> <span class="tok-o">=</span> <span class="tok-n">OffsetDateTime</span><span class="tok-o">.</span><span class="tok-na">parse</span><span class="tok-o">(</span><span class="tok-n">startTimeStr</span><span class="tok-o">,</span> <span class="tok-n">DATE_TIME_FORMATTER</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">endTimeStr</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">get</span><span class="tok-o">(</span><span class="tok-s">&quot;endTime&quot;</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">endTime</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">endTimeStr</span> <span class="tok-o">!=</span> <span class="tok-kc">null</span><span class="tok-o">)</span> <span class="tok-o">?</span>
+        <span class="tok-n">OffsetDateTime</span><span class="tok-o">.</span><span class="tok-na">parse</span><span class="tok-o">(</span><span class="tok-n">endTimeStr</span><span class="tok-o">,</span> <span class="tok-n">DATE_TIME_FORMATTER</span><span class="tok-o">)</span> <span class="tok-o">:</span> <span class="tok-o">(</span><span class="tok-n">OffsetDateTime</span><span class="tok-o">)</span><span class="tok-kc">null</span><span class="tok-o">;</span>
+    <span class="tok-n">val</span> <span class="tok-n">path</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;path&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;/MISSING_PATH&quot;</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">existStatusMap</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">Map</span><span class="tok-o">&lt;</span><span class="tok-n">String</span><span class="tok-o">,</span> <span class="tok-n">Object</span><span class="tok-o">&gt;)</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;exitStatus&quot;</span><span class="tok-o">,</span> <span class="tok-n">emptyMap</span><span class="tok-o">());</span>
+    <span class="tok-n">val</span> <span class="tok-n">exitDescription</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">existStatusMap</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;exitDescription&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;&quot;</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">exitCode</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">existStatusMap</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;exitCode&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;UNKNOWN&quot;</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">running</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-n">Boolean</span><span class="tok-o">)</span><span class="tok-n">existStatusMap</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;running&quot;</span><span class="tok-o">,</span> <span class="tok-n">Boolean</span><span class="tok-o">.</span><span class="tok-na">FALSE</span><span class="tok-o">);</span>
+    <span class="tok-n">val</span> <span class="tok-n">timeTaken</span> <span class="tok-o">=</span> <span class="tok-n">Long</span><span class="tok-o">.</span><span class="tok-na">valueOf</span><span class="tok-o">(</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;timeTaken&quot;</span><span class="tok-o">,</span> <span class="tok-o">-</span><span class="tok-mi">1L</span><span class="tok-o">).</span><span class="tok-na">toString</span><span class="tok-o">());</span>
+    <span class="tok-n">val</span> <span class="tok-n">jcrNodesWritten</span> <span class="tok-o">=</span> <span class="tok-n">Long</span><span class="tok-o">.</span><span class="tok-na">parseLong</span><span class="tok-o">(</span><span class="tok-n">map</span><span class="tok-o">.</span><span class="tok-na">getOrDefault</span><span class="tok-o">(</span><span class="tok-s">&quot;jcrNodesWritten&quot;</span><span class="tok-o">,</span> <span class="tok-o">-</span><span class="tok-mi">1L</span><span class="tok-o">).</span><span class="tok-na">toString</span><span class="tok-o">());</span>
+
+    <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-nf">JobStatus</span><span class="tok-o">(</span><span class="tok-n">uri</span><span class="tok-o">,</span> <span class="tok-n">transactionId</span><span class="tok-o">,</span> <span class="tok-n">jobExecutionId</span><span class="tok-o">,</span> <span class="tok-n">startTime</span><span class="tok-o">,</span> <span class="tok-n">endTime</span><span class="tok-o">,</span> <span class="tok-n">path</span><span class="tok-o">,</span> <span class="tok-n">timeTaken</span><span class="tok-o">,</span>
+        <span class="tok-n">jcrNodesWritten</span><span class="tok-o">,</span> <span class="tok-n">exitDescription</span><span class="tok-o">,</span> <span class="tok-n">exitCode</span><span class="tok-o">,</span> <span class="tok-n">running</span><span class="tok-o">);</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>val &#8220;gotchas&#8221;</h2><ul><li><span class="primary">Relies on type-inference from the right-side, whereas other parts of modern
+Java type-inference take it from the left</span><ul><li><span class="primary"><code>Map&lt;String, File&gt; cache = new HashMap&lt;&gt;();</code></span></li><li><span class="primary"><code>Function&lt;String, File&gt; cacheFun = cache::get;</code></span></li></ul></li><li><span class="primary"><code>val</code> currently <a href="https://github.com/rzwitserloot/lombok/issues/911">does not
+work inside lambdas</a>, so you need to extract the code out to a method</span><ul><li><span class="primary">Arguably, if the code is complicated enough (i.e., more than a single
+expression) to need an intermediate variable, it should be extracted into
+a method anyway</span></li></ul></li></ul></section>
+<section><h2>JDK 8</h2></section>
+<section><h2>Streams &amp; Lambdas</h2></section>
+<section><h2>Some Things To Realize About Streams</h2><ul><li><span class="primary">They are single-use only, like <code>Iterator</code></span></li><li><span class="primary">They&#8217;re monads, so all the really, <strong><em>really</em></strong> useful characteristics
+of monads apply from functional programming</span></li></ul></section>
+<section><h2>First a REALLY Simple Look at Monads</h2><p>Monads, Functors, etc. are fancy ways of saying &#8220;a value that is expressed
+as a function.&#8221;</p>
+<p>A monad, specifically, needs <code>map(i &#8594; o)</code> and <code>flatMap(i &#8594; M{o})</code> functions.</p>
+<div class="em07"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">Stream</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">&gt;</span> <span class="tok-o">{</span>
+    <span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-n">Stream</span><span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-nf">map</span><span class="tok-o">(</span><span class="tok-n">Function</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-n">mapper</span><span class="tok-o">);</span>
+    <span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-n">Stream</span><span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-nf">flatMap</span><span class="tok-o">(</span><span class="tok-n">Function</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">,</span> <span class="tok-n">Stream</span><span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;&gt;</span> <span class="tok-n">mapper</span><span class="tok-o">);</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Monad Use</h2><p>What that means is that you can transform that value in extremely
+flexible/powerful ways regardless of such things as:</p>
+<ul><li><span class="primary">it contains a single value or a many</span></li><li><span class="primary">the value exists at all (e.g., <code>Optional.empty()</code>)</span></li><li><span class="primary">the value doesn&#8217;t exist <strong><em>yet</em></strong> (e.g., asynchronous)</span></li><li><span class="primary">the complete value doesn&#8217;t fit into process space</span></li><li><span class="primary">it&#8217;s infinite</span></li><li><span class="primary">different modes of computation (e.g., serial or concurrent)</span></li><li><span class="primary">etc.</span></li></ul></section>
+<section><h2>Monad &#8220;Extractions&#8221;</h2><ul><li><span class="primary">A pure monad doesn&#8217;t expose its innards, like the Schrödinger&#8217;s cat box.</span></li><li><span class="primary">As long as it&#8217;s pure, it can retain all those properties.</span></li><li><span class="primary">When you &#8220;extract&#8221; from the monad (reach into the box) is when the computation machinery kicks in.</span></li></ul></section>
+<section><h2>Monad Reading</h2><p>There&#8217;s a <strong><em>LOT</em></strong> of stuff explaining monads, monoids, functors,
+endofunctions, etc. Just Google it.</p>
+<p>The best I&#8217;ve found for explaining it in Java code instead of mathematics
+notation is <a href="http://www.nurkiewicz.com/2016/06/functor-and-monad-examples-in-plain-java.html">Functor
+and monad examples in plain Java</a></p></section>
+<section><h2>Streams as Monads</h2><ul><li><span class="primary">Try to keep Streams &#8220;pure&#8221; as much as possible.</span></li><li><span class="primary">There&#8217;s effectively zero cost to them (computational, memory, etc.) until
+you do a &#8220;terminal&#8221; operation that destroys that purity.</span></li><li><span class="primary">At times it seems like <code>Stream</code> doesn&#8217;t want you to have it as a <code>Collection</code>
+or the like, making you have to jump through some hoops. That&#8217;s not by accident&#8230;&#8203;</span></li></ul></section>
+<section><h2>Extracting from Streams - findAny and collect</h2><div class="em065"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-nd">@Nullable</span> <span class="tok-n">HostJobState</span> <span class="tok-nf">put</span><span class="tok-o">(</span><span class="tok-n">HostJobState</span> <span class="tok-n">entry</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-n">val</span> <span class="tok-n">existing</span> <span class="tok-o">=</span> <span class="tok-n">entries</span><span class="tok-o">().</span><span class="tok-na">stream</span><span class="tok-o">().</span>
+        <span class="tok-n">filter</span><span class="tok-o">(</span><span class="tok-n">e</span> <span class="tok-o">-&gt;</span> <span class="tok-n">match</span><span class="tok-o">(</span><span class="tok-n">e</span><span class="tok-o">,</span> <span class="tok-n">entry</span><span class="tok-o">)).</span>
+        <span class="tok-n">findAny</span><span class="tok-o">().</span><span class="tok-na">orElse</span><span class="tok-o">(</span><span class="tok-kc">null</span><span class="tok-o">);</span>
+
+    <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">existing</span> <span class="tok-o">==</span> <span class="tok-kc">null</span> <span class="tok-o">||</span> <span class="tok-o">!</span><span class="tok-n">existing</span><span class="tok-o">.</span><span class="tok-na">state</span><span class="tok-o">().</span><span class="tok-na">equals</span><span class="tok-o">(</span><span class="tok-n">entry</span><span class="tok-o">.</span><span class="tok-na">state</span><span class="tok-o">()))</span> <span class="tok-o">{</span>
+        <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">existing</span> <span class="tok-o">==</span> <span class="tok-kc">null</span><span class="tok-o">)</span> <span class="tok-o">{</span> <span class="tok-c1">// new entry</span>
+            <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">hostJobStates</span> <span class="tok-o">=</span> <span class="tok-k">new</span> <span class="tok-n">ArrayList</span><span class="tok-o">&lt;&gt;(</span><span class="tok-n">entries</span><span class="tok-o">());</span>
+            <span class="tok-n">hostJobStates</span><span class="tok-o">.</span><span class="tok-na">add</span><span class="tok-o">(</span><span class="tok-n">entry</span><span class="tok-o">);</span>
+        <span class="tok-o">}</span>
+        <span class="tok-k">else</span> <span class="tok-o">{</span> <span class="tok-c1">// modified entry</span>
+            <span class="tok-n">hostJobStates</span> <span class="tok-o">=</span> <span class="tok-n">entries</span><span class="tok-o">().</span><span class="tok-na">stream</span><span class="tok-o">().</span>
+                <span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">e</span> <span class="tok-o">-&gt;</span> <span class="tok-n">match</span><span class="tok-o">(</span><span class="tok-n">e</span><span class="tok-o">,</span> <span class="tok-n">entry</span><span class="tok-o">)</span> <span class="tok-o">?</span> <span class="tok-n">entry</span> <span class="tok-o">:</span> <span class="tok-n">e</span><span class="tok-o">).</span>
+                <span class="tok-n">collect</span><span class="tok-o">(</span><span class="tok-n">Collectors</span><span class="tok-o">.</span><span class="tok-na">toList</span><span class="tok-o">());</span>
+        <span class="tok-o">}</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">return</span> <span class="tok-n">existing</span><span class="tok-o">;</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Extracting from Streams - forEach and method handles</h2><div class="em065"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">private</span> <span class="tok-kt">void</span> <span class="tok-nf">parseStartJobsOutput</span><span class="tok-o">(</span><span class="tok-n">String</span> <span class="tok-n">startJobsOutput</span><span class="tok-o">,</span>
+                                  <span class="tok-n">Subscriber</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIdSub</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// the output from starting a job looks like &quot;[123,125]&quot;</span>
+    <span class="tok-n">val</span> <span class="tok-n">matcher</span> <span class="tok-o">=</span> <span class="tok-n">JOB_IDS_PATTERN</span><span class="tok-o">.</span><span class="tok-na">matcher</span><span class="tok-o">(</span><span class="tok-n">startJobsOutput</span><span class="tok-o">);</span>
+    <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">matcher</span><span class="tok-o">.</span><span class="tok-na">matches</span><span class="tok-o">())</span> <span class="tok-o">{</span>
+        <span class="tok-n">val</span> <span class="tok-n">jobIdsStr</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-nd">@NonNull</span> <span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">matcher</span><span class="tok-o">.</span><span class="tok-na">group</span><span class="tok-o">(</span><span class="tok-s">&quot;jobIds&quot;</span><span class="tok-o">);</span>
+        <span class="tok-n">Arrays</span><span class="tok-o">.</span><span class="tok-na">stream</span><span class="tok-o">(</span><span class="tok-n">jobIdsStr</span><span class="tok-o">.</span><span class="tok-na">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)).</span>
+            <span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-nl">String:</span><span class="tok-o">:</span><span class="tok-n">trim</span><span class="tok-o">).</span>
+            <span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-nl">Long:</span><span class="tok-o">:</span><span class="tok-n">valueOf</span><span class="tok-o">).</span>
+            <span class="tok-n">forEach</span><span class="tok-o">(</span><span class="tok-n">jobId</span> <span class="tok-o">-&gt;</span> <span class="tok-n">jobIdSub</span><span class="tok-o">.</span><span class="tok-na">onNext</span><span class="tok-o">(</span><span class="tok-n">jobId</span><span class="tok-o">));</span>
+        <span class="tok-n">jobIdSub</span><span class="tok-o">.</span><span class="tok-na">onComplete</span><span class="tok-o">();</span>
+    <span class="tok-o">}</span>
+    <span class="tok-k">else</span> <span class="tok-o">{</span>
+        <span class="tok-n">jobIdSub</span><span class="tok-o">.</span><span class="tok-na">onError</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nf">IllegalStateException</span><span class="tok-o">(</span><span class="tok-s">&quot;Could not parse job &quot;</span> <span class="tok-o">+</span>
+            <span class="tok-s">&quot;ids from: &quot;</span> <span class="tok-o">+</span> <span class="tok-n">startJobsOutput</span><span class="tok-o">));</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Venkat Talks Lambdas</h2><figure class="image"><img src="images/venkat_lambdas.png" alt="venkat lambdas"></figure>
+<ul><li><span class="primary"><a href="https://www.youtube.com/watch?v=1OpAgZvYXLQ">Get a Taste of Lambdas and Get Addicted to Streams</a></span></li><li><span class="primary"><a href="https://www.youtube.com/watch?v=e4MT_OguDKg">Design Patterns in the Light of Lambda Expressions</a></span></li></ul></section>
+<section><h2>Useful Stream Creation Classes</h2></section>
+<section><h2>java.util.Collection</h2><div class="em08"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-k">default</span> <span class="tok-n">Stream</span><span class="tok-o">&lt;</span><span class="tok-n">E</span><span class="tok-o">&gt;</span> <span class="tok-nf">stream</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-n">StreamSupport</span><span class="tok-o">.</span><span class="tok-na">stream</span><span class="tok-o">(</span><span class="tok-n">spliterator</span><span class="tok-o">(),</span> <span class="tok-kc">false</span><span class="tok-o">);</span>
+<span class="tok-o">}</span>
+
+<span class="tok-k">default</span> <span class="tok-n">Stream</span><span class="tok-o">&lt;</span><span class="tok-n">E</span><span class="tok-o">&gt;</span> <span class="tok-nf">parallelStream</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-n">StreamSupport</span><span class="tok-o">.</span><span class="tok-na">stream</span><span class="tok-o">(</span><span class="tok-n">spliterator</span><span class="tok-o">(),</span> <span class="tok-kc">true</span><span class="tok-o">);</span>
+<span class="tok-o">}</span></code></pre></div>
+<ul><li><span class="primary">Everything that implements <code>Collection</code> automatically has <code>Stream</code> support.</span></li><li><span class="primary">A <code>Spliterator</code> is an <code>Iterator</code> that can be decomposed (useful for parallel iteration).</span></li></ul></section>
+<section><h2>java.util.stream.StreamSupport</h2><p>A set of factory methods that take take a <code>Spliterator</code> (of different types,
+including for primitives) to create a <code>Stream</code>.</p></section>
+<section><h2>java.util.Arrays</h2><p>Has <code>.spliterator(..)</code> and <code>.stream(..)</code> factory methods to wrap arrays.</p></section>
+<section><h2>java.util.stream.Collectors</h2><p>A set of functions for</p>
+<ul><li><span class="primary">collecting the values emitted by a Stream into collections like <code>List</code>, <code>Set</code>, <code>Map</code>, and <code>String</code></span></li><li><span class="primary">doing common aggregations, like counts, sums, min, max, average, &#8220;reducing&#8221;, grouping, etc.</span></li></ul></section>
+<section><h2>Where&#8217;s Elvis?</h2></section>
+<section><h2>java.util.Optional</h2><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-n">val</span> <span class="tok-n">existing</span> <span class="tok-o">=</span> <span class="tok-n">entries</span><span class="tok-o">().</span><span class="tok-na">stream</span><span class="tok-o">().</span>
+    <span class="tok-n">filter</span><span class="tok-o">(</span><span class="tok-n">e</span> <span class="tok-o">-&gt;</span> <span class="tok-n">match</span><span class="tok-o">(</span><span class="tok-n">e</span><span class="tok-o">,</span> <span class="tok-n">entry</span><span class="tok-o">)).</span>
+    <span class="tok-n">findAny</span><span class="tok-o">().</span><span class="tok-na">orElse</span><span class="tok-o">(</span><span class="tok-kc">null</span><span class="tok-o">);</span></code></pre></section>
+<section><h2>Still Not Quite Groovy&#8217;s Elvis&#8230;&#8203;</h2><pre class="source"><code data-lang="groovy" class="language-groovy prettyprint"><span class="tok-kd">public</span> <span class="tok-n">String</span> <span class="tok-nf">getIssuesUrl</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-n">issuesUrl</span> <span class="tok-o">?:</span> <span class="tok-s2">&quot;${siteUrl}/issues&quot;</span>
+<span class="tok-o">}</span></code></pre>
+<pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-n">String</span> <span class="tok-nf">getIssuesUrl</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-o">(</span><span class="tok-n">issuesUrl</span> <span class="tok-o">!=</span> <span class="tok-kc">null</span> <span class="tok-o">&amp;&amp;</span> <span class="tok-o">!</span><span class="tok-n">issuesUrl</span><span class="tok-o">.</span><span class="tok-na">isEmpty</span><span class="tok-o">())</span> <span class="tok-o">?</span>
+        <span class="tok-n">issues</span> <span class="tok-o">:</span> <span class="tok-s">&quot;${siteUrl}/issues&quot;</span>
+<span class="tok-o">}</span></code></pre></section>
+<section><h2>Try Again</h2><div class="em8"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * Convert the String into an Optional that only has value if the</span>
+<span class="tok-cm"> * input was both non-null and non-empty.</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-n">Optional</span><span class="tok-o">&lt;</span><span class="tok-n">String</span><span class="tok-o">&gt;</span> <span class="tok-nf">opt</span><span class="tok-o">(</span><span class="tok-n">String</span> <span class="tok-n">val</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-n">Optional</span><span class="tok-o">.</span><span class="tok-na">ofNullable</span><span class="tok-o">(</span><span class="tok-n">val</span><span class="tok-o">).</span><span class="tok-na">filter</span><span class="tok-o">(</span><span class="tok-n">s</span> <span class="tok-o">-&gt;</span> <span class="tok-o">!</span><span class="tok-n">s</span><span class="tok-o">.</span><span class="tok-na">isEmpty</span><span class="tok-o">());</span>
+<span class="tok-o">}</span>
+
+<span class="tok-kd">public</span> <span class="tok-n">String</span> <span class="tok-nf">getIssuesUrl</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-nf">opt</span><span class="tok-o">(</span><span class="tok-n">issuesUrl</span><span class="tok-o">).</span><span class="tok-na">orElseGet</span><span class="tok-o">(()</span> <span class="tok-o">-&gt;</span> <span class="tok-n">getSiteUrl</span><span class="tok-o">()</span> <span class="tok-o">+</span> <span class="tok-s">&quot;/issues&quot;</span><span class="tok-o">);</span>
+<span class="tok-o">}</span>
+
+<span class="tok-kd">public</span> <span class="tok-n">String</span> <span class="tok-nf">getBintrayPkg</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-nf">opt</span><span class="tok-o">(</span><span class="tok-n">bintrayPkg</span><span class="tok-o">).</span><span class="tok-na">orElse</span><span class="tok-o">(</span><span class="tok-n">project</span><span class="tok-o">.</span><span class="tok-na">getName</span><span class="tok-o">());</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Optional vs Groovy&#8217;s <code>?:</code> and <code>?.</code></h2><p>Groovy&#8217;s elvis and null-safe-dereference operators are a very succinct way of
+handling a very common situation in Java. But they are very specialized.</p></section>
+<section><p>Because <a href="https://dzone.com/articles/whats-wrong-java-8-part-iv"><code>Optional</code> is
+a monad</a> (though <a href="https://developer.atlassian.com/blog/2015/08/optional-broken/">not
+<em>entirely</em> pure</a>) there is much, much more that you can do with it.</p></section>
+<section><p><code>Optional</code> is great if you treat it as a monad instead of simply a
+null-wrapper (i.e., you should almost never call <code>.isPresent()</code> and <code>.get()</code>).</p></section>
+<section><h2>Misc JDK8</h2><ul><li><span class="primary">Default interface methods allowed adding a lot of extremely useful functions
+to the standard JDK classes without breaking everyone</span><ul><li><span class="primary">e.g., <code>Collection.stream()</code></span></li></ul></li><li><span class="primary"><code>java.util.Map</code> added a lot of great methods, such as <code>getOrDefault(..)</code>,
+<code>putIfAbsent(..)</code>, <code>computeIfPresent(..)</code>, etc.</span></li><li><span class="primary"><a href="http://www.mscharhag.com/java/java-8-date-time-api">The new DateTime API
+is really, really nice</a>. <span class="icon"><i class="fa fa-thumbs-o-up"></i></span></span><ul><li><span class="primary">May <code>java.util.Date</code>/<code>Calendar</code> be damned for
+all eternity. <span class="icon"><i class="fa fa-thumbs-down"></i></span></span></li></ul></li><li><span class="primary">Type Annotations allow you to put annotations on types anywhere a type
+declaration can appear, including local variables and type casts</span></li></ul></section>
+<section><h2>Softened Throws</h2></section>
+<section><h2>The Problem With Checked Exceptions</h2><p>Often we don&#8217;t want to expose underlying checked exceptions in our APIs, or
+it&#8217;s not our API to change (e.g., the Stream API).</p>
+<p class="smaller">(We&#8217;ll look later at an easy way of returning errors that aren&#8217;t &#8220;exceptional.&#8221;)</p></section>
+<section><h2>Ignoring the Exception for Now&#8230;&#8203;</h2><p>Assuming there isn&#8217;t anything reasonable to do with the exception at that point
+in the code, that means we end up either swallowing or wrapping the exception.</p>
+<p class="smaller">(Of course many JVM languages simply ignore the checked nature of exceptions,
+but I&#8217;m focussing on the Java Language.)</p></section>
+<section><h2>Wrapping Exceptions</h2><div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-k">try</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-o">}</span>
+<span class="tok-k">catch</span> <span class="tok-o">(</span><span class="tok-n">IOException</span> <span class="tok-n">e</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-k">throw</span> <span class="tok-k">new</span> <span class="tok-nf">RuntimeException</span><span class="tok-o">(</span><span class="tok-n">e</span><span class="tok-o">);</span>
+<span class="tok-o">}</span></code></pre></div>
+<p>The exception that gets thrown is, well, <strong><em>wrong</em></strong>.</p>
+<p>To get to the <strong><em>actual</em></strong> exception you have to call <code>.getCause()</code>.</p></section>
+<section><p>What would be great is if we can be unchecked and unwrapped&#8230;&#8203;</p></section>
+<section><p>Generics type erasure to the rescue!</p></section>
+<section><h2>Softened Exception</h2><div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * Remove checked-ness from the exception. The same exception is returned</span>
+<span class="tok-cm"> * (checked or unchecked), but this removes the compiler&#39;s checks.</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-o">&lt;</span><span class="tok-n">T</span> <span class="tok-kd">extends</span> <span class="tok-n">Throwable</span><span class="tok-o">&gt;</span> <span class="tok-n">RuntimeException</span> <span class="tok-nf">softened</span><span class="tok-o">(</span><span class="tok-n">T</span> <span class="tok-n">exp</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-n">Utils</span><span class="tok-o">.&lt;</span><span class="tok-n">RuntimeException</span><span class="tok-o">&gt;</span><span class="tok-n">uncheck</span><span class="tok-o">(</span><span class="tok-n">exp</span><span class="tok-o">);</span>
+<span class="tok-o">}</span>
+
+<span class="tok-kd">private</span> <span class="tok-kd">static</span> <span class="tok-o">&lt;</span><span class="tok-n">T</span> <span class="tok-kd">extends</span> <span class="tok-n">Throwable</span><span class="tok-o">&gt;</span> <span class="tok-n">T</span> <span class="tok-nf">uncheck</span><span class="tok-o">(</span><span class="tok-n">Throwable</span> <span class="tok-n">throwable</span><span class="tok-o">)</span> <span class="tok-kd">throws</span> <span class="tok-n">T</span> <span class="tok-o">{</span>
+    <span class="tok-k">throw</span> <span class="tok-o">(</span><span class="tok-n">T</span><span class="tok-o">)</span><span class="tok-n">throwable</span><span class="tok-o">;</span>
+<span class="tok-o">}</span></code></pre></div>
+<div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">protected</span> <span class="tok-kt">void</span> <span class="tok-nf">writeFile</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-n">Writer</span> <span class="tok-n">fileWriter</span> <span class="tok-o">=</span> <span class="tok-kc">null</span><span class="tok-o">;</span>
+    <span class="tok-k">try</span> <span class="tok-o">{</span>
+        <span class="tok-c1">// ...</span>
+    <span class="tok-o">}</span>
+    <span class="tok-k">catch</span> <span class="tok-o">(</span><span class="tok-n">IOException</span> <span class="tok-n">e</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">throw</span> <span class="tok-nf">softened</span><span class="tok-o">(</span><span class="tok-n">e</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+    <span class="tok-k">finally</span> <span class="tok-o">{</span>
+        <span class="tok-n">Utils</span><span class="tok-o">.</span><span class="tok-na">flushAndClose</span><span class="tok-o">(</span><span class="tok-n">fileWriter</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Checker Framework</h2><p><a href="http://types.cs.washington.edu/checker-framework/current/checker-framework-manual.html" class="bare">http://types.cs.washington.edu/checker-framework/current/checker-framework-manual.html</a></p></section>
+<section><figure class="image fullheight"><img src="images/checker-intro.png" alt="checker intro"></figure></section>
+<section><h2>Nullness Checker</h2><p>It hooks into <code>javac</code> and makes it extremely difficult to get an NPE.</p>
+<p>There&#8217;s no runtime component/impact, besides safer code.</p></section>
+<section><h2>@NonNull</h2><p>By default every parameter, field, variable, return value, etc. is effectively
+marked as <code>@NonNull</code></p>
+<p>Doing anything that may potentially cause the reference to be <code>null</code> (including
+not explicitly initializing it) causes a compile-time error</p></section>
+<section><h2>@Nullable</h2><p>If you mark a reference as being <code>@Nullable</code> then it will be a compile-time
+error to dereference it unless a prior nullness check (e.g.,
+<code>if (myVar != null)</code> ) guarantees that the execution branch can not be
+<code>null</code>.</p></section>
+<section><h2>Much Safer Code</h2><p>I&#8217;m pretty good about making sure I don&#8217;t get an NPE, but this has saved me a
+few times.</p>
+<p>Also, because it does the flow-analysis, it highlights execution branches you
+might not have thought of.</p></section>
+<section><h2>Better Use of the Type System</h2><p>It&#8217;s very much like static typing (which is what it&#8217;s leveraging).</p>
+<p>Sometimes it&#8217;s useful to be &#8220;loosely typed&#8221; (or not explicitly nullness
+checked), but most of the time it&#8217;s much better to let the computer be
+anal-retentive.</p></section>
+<section><h2>It&#8217;s Not Free</h2><p>Of course the more the compiler has to do, the longer the compiler takes.</p>
+<p>In general it&#8217;s an easy call that spending a little more time compiling is
+worth it to get the additional safety and &#8220;correctness&#8221; checking.</p></section>
+<section><h2>Tutorial</h2><p>See <a href="https://github.com/glts/safer-spring-petclinic/wiki/Our-mission" class="bare">https://github.com/glts/safer-spring-petclinic/wiki/Our-mission</a></p>
+<p>(a wizard-y wiki walking through the classic PetClinic sample)</p>
+<p>for a good walk-through</p></section>
+<section><h2>Either&lt;L, R&gt;</h2></section>
+<section><p>There are times when you need to be able to return one of two types that have no reasonable common ancestor (i.e., they are &#8220;disjoint&#8221; types).</p></section>
+<section><p>What that often means is returning <code>Object</code> and then a series of <code>instanceof</code> calls.</p></section>
+<section><div class="em07"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * An either/or (XOR) value represented as Left/Right.</span>
+<span class="tok-cm"> *</span>
+<span class="tok-cm"> * By convention, Left is an error value whereas Right is a success value.</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">Either</span><span class="tok-o">&lt;</span><span class="tok-n">L</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-kd">extends</span> <span class="tok-n">Supplier</span><span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-o">{</span>
+    <span class="tok-kt">boolean</span> <span class="tok-nf">isLeft</span><span class="tok-o">();</span>
+
+    <span class="tok-n">L</span> <span class="tok-nf">getLeft</span><span class="tok-o">();</span>
+
+    <span class="tok-kt">boolean</span> <span class="tok-nf">isRight</span><span class="tok-o">();</span>
+
+    <span class="tok-n">R</span> <span class="tok-nf">get</span><span class="tok-o">();</span>
+
+    <span class="tok-kd">static</span> <span class="tok-o">&lt;</span><span class="tok-n">L</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-n">Left</span><span class="tok-o">&lt;</span><span class="tok-n">L</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-nf">left</span><span class="tok-o">(</span><span class="tok-n">L</span> <span class="tok-n">value</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-n">Left</span><span class="tok-o">&lt;&gt;(</span><span class="tok-n">value</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-kd">static</span> <span class="tok-o">&lt;</span><span class="tok-n">L</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-n">Right</span><span class="tok-o">&lt;</span><span class="tok-n">L</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-nf">right</span><span class="tok-o">(</span><span class="tok-n">R</span> <span class="tok-n">value</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-n">Right</span><span class="tok-o">&lt;&gt;(</span><span class="tok-n">value</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Example Either Return</h2><div class="em08"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">final</span> <span class="tok-kd">class</span> <span class="tok-nc">CliOptions</span> <span class="tok-o">{</span>
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Parse the arguments.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * @param args the command line arguments</span>
+<span class="tok-cm">     * @return Right if successfully parsed; otherwise Left with</span>
+<span class="tok-cm">     *         the error message/help</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-n">Either</span><span class="tok-o">&lt;</span><span class="tok-n">String</span><span class="tok-o">,</span> <span class="tok-n">CliOptions</span><span class="tok-o">&gt;</span> <span class="tok-nf">create</span><span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">[]</span> <span class="tok-n">args</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-c1">// ...</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><div class="em08"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-kt">void</span> <span class="tok-nf">main</span><span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">[]</span> <span class="tok-n">args</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-n">val</span> <span class="tok-n">cliOptions</span> <span class="tok-o">=</span> <span class="tok-n">CliOptions</span><span class="tok-o">.</span><span class="tok-na">create</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-o">);</span>
+
+    <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">cliOptions</span><span class="tok-o">.</span><span class="tok-na">isRight</span><span class="tok-o">())</span> <span class="tok-o">{</span>
+        <span class="tok-n">run</span><span class="tok-o">(</span><span class="tok-n">cliOptions</span><span class="tok-o">.</span><span class="tok-na">get</span><span class="tok-o">());</span>
+        <span class="tok-n">System</span><span class="tok-o">.</span><span class="tok-na">exit</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+    <span class="tok-k">else</span> <span class="tok-o">{</span>
+        <span class="tok-n">System</span><span class="tok-o">.</span><span class="tok-na">err</span><span class="tok-o">.</span><span class="tok-na">println</span><span class="tok-o">(</span><span class="tok-n">cliOptions</span><span class="tok-o">.</span><span class="tok-na">getLeft</span><span class="tok-o">());</span>
+        <span class="tok-n">System</span><span class="tok-o">.</span><span class="tok-na">exit</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div>
+<figure class="image"><img src="images/cli-main.png" alt="cli main"></figure></section>
+<section><p>Grabbit CLI uses a much simplified version of <code>Either</code> based
+on the work in <a href="http://www.javaslang.io/">Javaslang</a>, a really awesome library
+that helps with Scala-envy.</p>
+<p class="smaller">(Didn&#8217;t want to include Javaslang in the fat-jar for that single class.)</p></section>
+<section><h2>Reactive Streams</h2><p><a href="http://www.reactive-streams.org/" class="bare">http://www.reactive-streams.org/</a></p></section>
+<section><h2>The Basics</h2><p>Similar to <code>java.util.Stream</code> juiced <strong>WAAAAAAAAY</strong> up.</p>
+<p>Three core simple interfaces that enable the capabilities of</p>
+<p><a href="http://www.reactivemanifesto.org/">The Reactive Manifesto</a></p>
+<p>Will be a core part of JDK 9 as
+<a href="http://download.java.net/java/jdk9/docs/api/java/util/concurrent/Flow.html">java.util.concurrent.Flow.*</a></p></section>
+<section><h2>The Interfaces</h2><ul><li><span class="primary"><strong>Publisher&lt;T&gt;</strong> - A <code>Publisher</code> is a provider of a potentially unbounded number of sequenced elements, publishing them according to the demand received from its <code>Subscriber</code>(s).</span></li><li><span class="primary"><strong>Subscriber&lt;T&gt;</strong> - Receives callbacks when a <code>Subscription</code> is created, data is ready from the <code>Publisher</code>, data is complete, or there is an error.</span></li><li><span class="primary"><strong>Subscription</strong> - A <code>Subscription</code> represents a one-to-one lifecycle of a <code>Subscriber</code> subscribing to a <code>Publisher</code>.</span></li></ul>
+<p>With a forth &#8220;combo&#8221; interface:</p>
+<ul><li><span class="primary"><strong>Processor&lt;T,R&gt;</strong> - A <code>Processor</code> represents a processing stage—which is both a <code>Subscriber</code> and a <code>Publisher</code> and obeys the contracts of both.</span></li></ul></section>
+<section><figure class="image fullheight"><img src="images/reactive-sequence.svg" alt="reactive sequence"></figure></section>
+<section><div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">Subscriber</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">&gt;</span> <span class="tok-o">{</span>
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Invoked after calling Publisher#subscribe(Subscriber).</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * No data will start flowing until Subscription#request(long) is invoked.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * It is the responsibility of this Subscriber instance to call Subscription#request(long) whenever more data is wanted.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * The Publisher will send notifications only in response to Subscription#request(long).</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * @param s Subscription that allows requesting data via Subscription#request(long)</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">onSubscribe</span><span class="tok-o">(</span><span class="tok-n">Subscription</span> <span class="tok-n">s</span><span class="tok-o">);</span>
+
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Data notification sent by the Publisher in response to requests to Subscription#request(long).</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * @param t the element signaled</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">onNext</span><span class="tok-o">(</span><span class="tok-n">T</span> <span class="tok-n">t</span><span class="tok-o">);</span>
+
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Failed terminal state.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * No further events will be sent even if Subscription#request(long) is invoked again.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * @param t the throwable signaled</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">onError</span><span class="tok-o">(</span><span class="tok-n">Throwable</span> <span class="tok-n">t</span><span class="tok-o">);</span>
+
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Successful terminal state.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * No further events will be sent even if Subscription#request(long) is invoked again.</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">onComplete</span><span class="tok-o">();</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">&gt;</span> <span class="tok-o">{</span>
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Request Publisher to start streaming data.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * This is a &quot;factory method&quot; and can be called multiple times,</span>
+<span class="tok-cm">     * each time starting a new Subscription.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * Each Subscription will work for only a single Subscriber.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * A Subscriber should only subscribe once to a single Publisher.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * If the Publisher rejects the subscription attempt or otherwise fails it</span>
+<span class="tok-cm">     * will signal the error via Subscriber#onError.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * @param s the Subscriber that will consume signals from this Publisher</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">subscribe</span><span class="tok-o">(</span><span class="tok-n">Subscriber</span><span class="tok-o">&lt;?</span> <span class="tok-kd">super</span> <span class="tok-n">T</span><span class="tok-o">&gt;</span> <span class="tok-n">s</span><span class="tok-o">);</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">Subscription</span> <span class="tok-o">{</span>
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * No events will be sent by a Publisher until demand is signaled via this method.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * It can be called however often and whenever needed - but the outstanding</span>
+<span class="tok-cm">     * cumulative demand must never exceed Long.MAX_VALUE. An outstanding</span>
+<span class="tok-cm">     * cumulative demand of Long.MAX_VALUE may be treated by the Publisher as</span>
+<span class="tok-cm">     * &quot;effectively unbounded&quot;.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * Whatever has been requested can be sent by the Publisher so only signal</span>
+<span class="tok-cm">     * demand for what can be safely handled.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * A Publisher can send less than is requested if the stream ends but then</span>
+<span class="tok-cm">     * must emit either Subscriber#onError(Throwable) or Subscriber#onComplete().</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * @param n the strictly positive number of elements to requests to the upstream Publisher</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">request</span><span class="tok-o">(</span><span class="tok-kt">long</span> <span class="tok-n">n</span><span class="tok-o">);</span>
+
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">     * Request the Publisher to stop sending data and clean up resources.</span>
+<span class="tok-cm">     *</span>
+<span class="tok-cm">     * Data may still be sent to meet previously signalled demand after calling cancel as</span>
+<span class="tok-cm">     * this request is asynchronous.</span>
+<span class="tok-cm">     */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">cancel</span><span class="tok-o">();</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><div class="em08"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">Processor</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">,</span> <span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-kd">extends</span> <span class="tok-n">Subscriber</span><span class="tok-o">&lt;</span><span class="tok-n">T</span><span class="tok-o">&gt;,</span> <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">R</span><span class="tok-o">&gt;</span> <span class="tok-o">{</span>
+<span class="tok-o">}</span></code></pre></div>
+<ul><li><span class="primary">This is the &#8220;glue&#8221; of the system</span></li><li><span class="primary">Receives data as a <code>Subscriber</code>, transforms it, then sends it back out as a <code>Publisher</code>.</span></li><li><span class="primary">Virtually all actions in a sequence are implemented as a <code>Processor</code>.</span></li></ul></section>
+<section><h2>Implementations</h2><p>The primary implementations are:</p>
+<ul><li><span class="primary"><a href="https://github.com/ReactiveX/RxJava">RxJava</a> - primarily built by NetFlix
+based on Microsoft&#8217;s pioneering &#8220;Reactive Extensions&#8221; work; widely deployed
+and very battle-tested</span></li><li><span class="primary"><a href="http://projectreactor.io/">Project Reactor</a> - primarily built by Pivotal, it
+largely focusses on being &#8220;lean and mean&#8221;</span></li><li><span class="primary"><a href="http://doc.akka.io/docs/akka/2.4.8/scala/stream/index.html">Akka Streams</a> -
+primarily built by Lightbend for Scala, it&#8217;s the most &#8220;full stack&#8221; system</span></li></ul></section>
+<section><h2>Project Reactor</h2><ul><li><span class="primary">Pre-v2.5 looked a lot like RxJava with some new ideas.</span></li><li><span class="primary">v2.5+ takes full advantage of JDK8+ and is going to be the foundation of
+the &#8220;reactive&#8221; changes in Spring Framework v5.</span></li></ul></section>
+<section><p>For our purposes, the primary classes are <code>Flux</code> and <code>Mono</code>, both of which implement <code>Publisher</code></p></section>
+<section><ul><li><span class="primary">Add useful methods, such as <code>map(..)</code>, <code>flatMap(..)</code>, <code>filter(..)</code>, etc.</span></li><li><span class="primary">Support back-pressure, hot &amp; cold streams, etc.</span></li></ul></section>
+<section><h2>Mono</h2><p>Will publish <strong><em>at most</em></strong> one element.</p>
+<p>Essentially a very, very fancy <code>java.util.Optional</code>.</p>
+<p>Provides <code>.block(..)</code> to do the &#8220;extraction.&#8221;</p></section>
+<section><h2>Flux</h2><p>More like <code>java.util.stream.Stream</code>, with no limit on size.</p></section>
+<section><h2>Example - Starting Jobs</h2><div class="em08"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * Start the jobs on the Grabbit clients, returning the hosts</span>
+<span class="tok-cm"> * and the jobs ids.</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">public</span> <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">HostAndJobIds</span><span class="tok-o">&gt;</span> <span class="tok-nf">startJobs</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-n">Flux</span><span class="tok-o">.</span><span class="tok-na">fromIterable</span><span class="tok-o">(</span><span class="tok-n">hosts</span><span class="tok-o">).</span>
+        <span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-k">this</span><span class="tok-o">::</span><span class="tok-n">startJobsForHost</span><span class="tok-o">);</span>
+<span class="tok-o">}</span>
+
+<span class="tok-kd">private</span> <span class="tok-n">HostAndJobIds</span> <span class="tok-nf">startJobsForHost</span><span class="tok-o">(</span><span class="tok-n">HostInfo</span> <span class="tok-n">hostInfo</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIds</span> <span class="tok-o">=</span> <span class="tok-n">startJobsOnHost</span><span class="tok-o">(</span><span class="tok-n">hostInfo</span><span class="tok-o">.</span><span class="tok-na">baseUri</span><span class="tok-o">(),</span>
+                                             <span class="tok-n">hostInfo</span><span class="tok-o">.</span><span class="tok-na">credentials</span><span class="tok-o">());</span>
+    <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-nf">HostAndJobIds</span><span class="tok-o">(</span><span class="tok-n">hostInfo</span><span class="tok-o">.</span><span class="tok-na">baseUri</span><span class="tok-o">(),</span> <span class="tok-n">jobIds</span><span class="tok-o">);</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Example - Consuming the Started Jobs</h2><div class="em08"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * Print the started jobs to the PrintStream, waiting up to 30</span>
+<span class="tok-cm"> * minutes for the jobs to finish starting across all the hosts.</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">static</span> <span class="tok-kt">void</span> <span class="tok-nf">printStartedJobs</span><span class="tok-o">(</span><span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">HostAndJobIds</span><span class="tok-o">&gt;</span> <span class="tok-n">startedJobs</span><span class="tok-o">,</span>
+                             <span class="tok-n">PrintStream</span> <span class="tok-n">out</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-n">Flux</span><span class="tok-o">.</span><span class="tok-na">from</span><span class="tok-o">(</span><span class="tok-n">startedJobs</span><span class="tok-o">).</span>
+        <span class="tok-n">flatMap</span><span class="tok-o">(</span><span class="tok-nl">GrabbitCli:</span><span class="tok-o">:</span><span class="tok-n">hostAndJobIdsToStrings</span><span class="tok-o">).</span>
+        <span class="tok-n">doOnNext</span><span class="tok-o">(</span><span class="tok-nl">out:</span><span class="tok-o">:</span><span class="tok-n">println</span><span class="tok-o">).</span>
+        <span class="tok-n">then</span><span class="tok-o">().</span><span class="tok-na">block</span><span class="tok-o">(</span><span class="tok-n">Duration</span><span class="tok-o">.</span><span class="tok-na">ofMinutes</span><span class="tok-o">(</span><span class="tok-mi">30</span><span class="tok-o">));</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>Example - Processor and Subscriber</h2><div class="em05"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * Start a process on {@link #executorService} that connects to the Grabbit client at `baseUri` and</span>
+<span class="tok-cm"> * publishes the job ids.</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">private</span> <span class="tok-n">Publisher</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-nf">startJobsOnHost</span><span class="tok-o">(</span><span class="tok-kd">final</span> <span class="tok-n">URI</span> <span class="tok-n">baseUri</span><span class="tok-o">,</span> <span class="tok-n">UsernameAndPassword</span> <span class="tok-n">credentials</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-kd">final</span> <span class="tok-n">Processor</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">,</span> <span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">processor</span> <span class="tok-o">=</span> <span class="tok-n">WorkQueueProcessor</span><span class="tok-o">.</span><span class="tok-na">share</span><span class="tok-o">(</span><span class="tok-n">executorService</span><span class="tok-o">);</span>
+    <span class="tok-n">executorService</span><span class="tok-o">.</span><span class="tok-na">execute</span><span class="tok-o">(()</span> <span class="tok-o">-&gt;</span> <span class="tok-n">startJobsOnHostWithSubscriber</span><span class="tok-o">(</span><span class="tok-n">processor</span><span class="tok-o">,</span> <span class="tok-n">baseUri</span><span class="tok-o">,</span> <span class="tok-n">credentials</span><span class="tok-o">));</span>
+    <span class="tok-k">return</span> <span class="tok-n">processor</span><span class="tok-o">;</span>
+<span class="tok-o">}</span>
+
+<span class="tok-kd">private</span> <span class="tok-kt">void</span> <span class="tok-nf">startJobsOnHostWithSubscriber</span><span class="tok-o">(</span><span class="tok-n">Subscriber</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIdSubscriber</span><span class="tok-o">,</span> <span class="tok-n">URI</span> <span class="tok-n">baseUri</span><span class="tok-o">,</span>
+                                           <span class="tok-n">UsernameAndPassword</span> <span class="tok-n">credentials</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-o">}</span>
+
+<span class="tok-kd">private</span> <span class="tok-kt">void</span> <span class="tok-nf">parseStartJobsOutput</span><span class="tok-o">(</span><span class="tok-n">String</span> <span class="tok-n">startJobsOutput</span><span class="tok-o">,</span> <span class="tok-n">Subscriber</span><span class="tok-o">&lt;</span><span class="tok-n">Long</span><span class="tok-o">&gt;</span> <span class="tok-n">jobIdSub</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// the output from starting a job looks like &quot;[123,125]&quot;</span>
+    <span class="tok-n">val</span> <span class="tok-n">matcher</span> <span class="tok-o">=</span> <span class="tok-n">JOB_IDS_PATTERN</span><span class="tok-o">.</span><span class="tok-na">matcher</span><span class="tok-o">(</span><span class="tok-n">startJobsOutput</span><span class="tok-o">);</span>
+    <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">matcher</span><span class="tok-o">.</span><span class="tok-na">matches</span><span class="tok-o">())</span> <span class="tok-o">{</span>
+        <span class="tok-n">val</span> <span class="tok-n">jobIdsStr</span> <span class="tok-o">=</span> <span class="tok-o">(</span><span class="tok-nd">@NonNull</span> <span class="tok-n">String</span><span class="tok-o">)</span><span class="tok-n">matcher</span><span class="tok-o">.</span><span class="tok-na">group</span><span class="tok-o">(</span><span class="tok-s">&quot;jobIds&quot;</span><span class="tok-o">);</span>
+        <span class="tok-n">Arrays</span><span class="tok-o">.</span><span class="tok-na">stream</span><span class="tok-o">(</span><span class="tok-n">jobIdsStr</span><span class="tok-o">.</span><span class="tok-na">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)).</span>
+            <span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-nl">String:</span><span class="tok-o">:</span><span class="tok-n">trim</span><span class="tok-o">).</span>
+            <span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-nl">Long:</span><span class="tok-o">:</span><span class="tok-n">valueOf</span><span class="tok-o">).</span>
+            <span class="tok-n">forEach</span><span class="tok-o">(</span><span class="tok-n">jobId</span> <span class="tok-o">-&gt;</span> <span class="tok-n">jobIdSub</span><span class="tok-o">.</span><span class="tok-na">onNext</span><span class="tok-o">(</span><span class="tok-n">jobId</span><span class="tok-o">));</span>
+        <span class="tok-n">jobIdSub</span><span class="tok-o">.</span><span class="tok-na">onComplete</span><span class="tok-o">();</span>
+    <span class="tok-o">}</span>
+    <span class="tok-k">else</span> <span class="tok-o">{</span>
+        <span class="tok-n">jobIdSub</span><span class="tok-o">.</span><span class="tok-na">onError</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nf">IllegalStateException</span><span class="tok-o">(</span><span class="tok-s">&quot;Could not parse job ids from: &quot;</span> <span class="tok-o">+</span> <span class="tok-n">startJobsOutput</span><span class="tok-o">));</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><h2>AsciiDoclet w/ AsciiDoctor Diagram</h2><ul><li><span class="primary"><a href="http://asciidoctor.org/" class="bare">http://asciidoctor.org/</a></span></li><li><span class="primary"><a href="https://github.com/asciidoctor/asciidoclet" class="bare">https://github.com/asciidoctor/asciidoclet</a></span></li><li><span class="primary"><a href="http://asciidoctor.org/docs/asciidoctor-diagram/" class="bare">http://asciidoctor.org/docs/asciidoctor-diagram/</a></span></li></ul></section>
+<section><div class="em04"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-cm">/**</span>
+<span class="tok-cm"> * Entry point for the command line arguments.</span>
+<span class="tok-cm"> *</span>
+<span class="tok-cm"> * [plantuml]</span>
+<span class="tok-cm"> * ....</span>
+<span class="tok-cm"> * start</span>
+<span class="tok-cm"> * :CliOptions.create(argv);</span>
+<span class="tok-cm"> * if (Either(error message, CliOptions)) then (error message)</span>
+<span class="tok-cm"> *     :print error message to STDERR;</span>
+<span class="tok-cm"> *     end</span>
+<span class="tok-cm"> * else (CliOptions)</span>
+<span class="tok-cm"> *     :run(cliOptions);</span>
+<span class="tok-cm"> *     stop</span>
+<span class="tok-cm"> * endif</span>
+<span class="tok-cm"> * ....</span>
+<span class="tok-cm"> *</span>
+<span class="tok-cm"> * @param args CLI arguments</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-kt">void</span> <span class="tok-nf">main</span><span class="tok-o">(</span><span class="tok-n">String</span><span class="tok-o">[]</span> <span class="tok-n">args</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-o">}</span>
+
+<span class="tok-cm">/**</span>
+<span class="tok-cm"> * Runs the appropriate process(es) for the command line options.</span>
+<span class="tok-cm"> *</span>
+<span class="tok-cm"> * Output from the processes are sent to STDOUT.</span>
+<span class="tok-cm"> *</span>
+<span class="tok-cm"> * [plantuml]</span>
+<span class="tok-cm"> * ....</span>
+<span class="tok-cm"> * :CliOptions.create(argv);</span>
+<span class="tok-cm"> * if (start) then (true)</span>
+<span class="tok-cm"> *     if (monitor) then (true)</span>
+<span class="tok-cm"> *         :startWithMonitor(..);</span>
+<span class="tok-cm"> *     else (false)</span>
+<span class="tok-cm"> *         :startWithNoMonitor(..);</span>
+<span class="tok-cm"> *     endif</span>
+<span class="tok-cm"> * else (false)</span>
+<span class="tok-cm"> *     :monitorJobs(..);</span>
+<span class="tok-cm"> * endif</span>
+<span class="tok-cm"> * ....</span>
+<span class="tok-cm"> *</span>
+<span class="tok-cm"> * @see #startWithMonitor(String, String, String, PrintStream)</span>
+<span class="tok-cm"> * @see #startWithNoMonitor(String, String, String, PrintStream)</span>
+<span class="tok-cm"> * @see #monitorJobs(String, String, String, PrintStream)</span>
+<span class="tok-cm"> */</span>
+<span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-kt">void</span> <span class="tok-nf">run</span><span class="tok-o">(</span><span class="tok-n">CliOptions</span> <span class="tok-n">options</span><span class="tok-o">)</span> <span class="tok-kd">throws</span> <span class="tok-n">IOException</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-o">}</span></code></pre></div></section>
+<section><figure class="image fullheight"><img src="images/javadoc_with_uml.png" alt="javadoc with uml"></figure></section>
+<section><h2>Typed Builders</h2></section>
+<section><div class="em06"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-n">PollingJobMonitor</span><span class="tok-o">.</span><span class="tok-na">Builder</span> <span class="tok-nf">builder</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-n">PollingJobMonitor</span><span class="tok-o">.</span><span class="tok-na">Builder</span><span class="tok-o">();</span>
+<span class="tok-o">}</span>
+<span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-kd">class</span> <span class="tok-nc">Builder</span> <span class="tok-o">{</span>
+    <span class="tok-c1">// ...</span>
+    <span class="tok-kd">public</span> <span class="tok-n">PollingJobMonitor</span> <span class="tok-nf">build</span><span class="tok-o">()</span> <span class="tok-kd">throws</span> <span class="tok-n">IllegalStateException</span> <span class="tok-o">{</span>
+        <span class="tok-c1">// ...</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">public</span> <span class="tok-n">Builder</span> <span class="tok-nf">jobStatusCache</span><span class="tok-o">(</span><span class="tok-n">JobStatusCache</span> <span class="tok-n">jobStatusCache</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobStatusCache</span> <span class="tok-o">=</span> <span class="tok-n">jobStatusCache</span><span class="tok-o">;</span> <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">public</span> <span class="tok-n">Builder</span> <span class="tok-nf">executor</span><span class="tok-o">(</span><span class="tok-n">ExecutorService</span> <span class="tok-n">executorService</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">executorService</span> <span class="tok-o">=</span> <span class="tok-n">executorService</span><span class="tok-o">;</span> <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">public</span> <span class="tok-n">Builder</span> <span class="tok-nf">environment</span><span class="tok-o">(</span><span class="tok-n">Environment</span> <span class="tok-n">environment</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">environment</span> <span class="tok-o">=</span> <span class="tok-n">environment</span><span class="tok-o">;</span> <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">public</span> <span class="tok-n">Builder</span> <span class="tok-nf">poller</span><span class="tok-o">(</span><span class="tok-n">JobStatusPoller</span> <span class="tok-n">jobStatusPoller</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">jobStatusPoller</span> <span class="tok-o">=</span> <span class="tok-n">jobStatusPoller</span><span class="tok-o">;</span> <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">public</span> <span class="tok-n">Builder</span> <span class="tok-nf">sleep</span><span class="tok-o">(</span><span class="tok-kt">long</span> <span class="tok-n">sleepMs</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">sleepMs</span> <span class="tok-o">=</span> <span class="tok-n">sleepMs</span><span class="tok-o">;</span> <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div>
+<div class="em07"><ul><li><span class="primary">You only need to set <code>ExecutorService</code> <strong><em>or</em></strong> <code>Environment</code>, but at least
+one of them must be set.</span></li><li><span class="primary"><code>JobStatusCache</code> is required, but <code>JobStatusPoller</code> and <code>sleep</code> are optional.</span></li><li><span class="primary">If <code>build()</code> is called without all the requirements being met, it throws an
+<code>IllegalStateException</code>.</span></li></ul></div></section>
+<section><div class="em06"><pre class="source"><code data-lang="java" class="language-java prettyprint"><span class="tok-kd">public</span> <span class="tok-kd">static</span> <span class="tok-n">B</span><span class="tok-o">.</span><span class="tok-na">WithJobStatusCache</span> <span class="tok-nf">builder</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+    <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-n">B</span><span class="tok-o">.</span><span class="tok-na">Builder</span><span class="tok-o">();</span>
+<span class="tok-o">}</span>
+<span class="tok-kd">public</span> <span class="tok-kd">interface</span> <span class="tok-nc">B</span> <span class="tok-o">{</span> <span class="tok-c1">// namespacing</span>
+    <span class="tok-kd">class</span> <span class="tok-nc">Builder</span> <span class="tok-kd">implements</span> <span class="tok-n">Build</span><span class="tok-o">,</span> <span class="tok-n">ExecutorOrEnvironment</span><span class="tok-o">,</span> <span class="tok-n">WithJobStatusCache</span> <span class="tok-o">{</span>
+        <span class="tok-c1">//... virtually identical to before</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">interface</span> <span class="tok-nc">Build</span> <span class="tok-o">{</span>
+        <span class="tok-n">PollingJobMonitor</span> <span class="tok-nf">build</span><span class="tok-o">();</span>
+        <span class="tok-n">Build</span> <span class="tok-nf">poller</span><span class="tok-o">(</span><span class="tok-n">JobStatusPoller</span> <span class="tok-n">jobStatusPoller</span><span class="tok-o">);</span>
+        <span class="tok-n">Build</span> <span class="tok-nf">sleep</span><span class="tok-o">(</span><span class="tok-kt">long</span> <span class="tok-n">sleepMs</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">interface</span> <span class="tok-nc">WithExecutor</span> <span class="tok-o">{</span>
+        <span class="tok-n">Build</span> <span class="tok-nf">executor</span><span class="tok-o">(</span><span class="tok-n">ExecutorService</span> <span class="tok-n">executorService</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">interface</span> <span class="tok-nc">WithEnvironment</span> <span class="tok-o">{</span>
+        <span class="tok-n">Build</span> <span class="tok-nf">environment</span><span class="tok-o">(</span><span class="tok-n">Environment</span> <span class="tok-n">environment</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">interface</span> <span class="tok-nc">ExecutorOrEnvironment</span> <span class="tok-kd">extends</span> <span class="tok-n">WithExecutor</span><span class="tok-o">,</span> <span class="tok-n">WithEnvironment</span> <span class="tok-o">{</span>
+    <span class="tok-o">}</span>
+    <span class="tok-kd">interface</span> <span class="tok-nc">WithJobStatusCache</span> <span class="tok-o">{</span>
+        <span class="tok-n">ExecutorOrEnvironment</span> <span class="tok-nf">jobStatusCache</span><span class="tok-o">(</span><span class="tok-n">JobStatusCache</span> <span class="tok-n">jobStatusCache</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre></div>
+<div class="em07"><ul><li><span class="primary">The type system is acting as a compile-time state machine, ensuring that it&#8217;s
+<strong>impossible</strong> to call <code>build()</code> in a bad state.</span></li></ul></div></section>
+<section><h2>Static Analysis (&#8220;Linting&#8221;)</h2></section>
+<section><h2>Primary Java Linters</h2><ul><li><span class="primary">PMD</span><ul><li><span class="primary"><a href="https://pmd.github.io/" class="bare">https://pmd.github.io/</a></span></li><li><span class="primary">Source code analyzer looking for unused/overly-complex code, copy &amp; paste, etc.</span></li></ul></li><li><span class="primary">CheckStyle</span><ul><li><span class="primary"><a href="http://checkstyle.sourceforge.net/" class="bare">http://checkstyle.sourceforge.net/</a></span></li><li><span class="primary">Source code analyzer focussed on coding standards.</span></li></ul></li><li><span class="primary">FindBugs</span><ul><li><span class="primary"><a href="http://findbugs.sourceforge.net/" class="bare">http://findbugs.sourceforge.net/</a></span></li><li><span class="primary">Byte-code analyzer. Especially useful for the kinds of bugs that are
+easier to detect in compiled form.</span></li></ul></li></ul></section>
+<section><p>There&#8217;s a great deal of overlap between them.</p>
+<p>They have different strengths/focusses, so use all three.</p></section>
+<section><h2>Review</h2><ol class="toc"><li><span class="primary">Capsule</span></li><li><span class="primary">Lombok</span></li><li><span class="primary">JDK 8</span><ul><li><span class="primary">Streams &amp; Lambdas</span></li><li><span class="primary">Where&#8217;s Elvis? <code>?:</code></span></li><li><span class="primary">Misc</span></li></ul></li><li><span class="primary">Softened Throws</span></li><li><span class="primary">Either</span></li><li><span class="primary">Checker Framework</span></li><li><span class="primary">Reactive Streams</span></li><li><span class="primary">AsciiDoclet</span></li><li><span class="primary">Typed Builders</span></li><li><span class="primary">Static Analysis</span></li></ol></section>
+<section><h2>Q &amp; A</h2></section></article><script src="build/build.js"></script></body></html>
