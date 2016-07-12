@@ -240,7 +240,8 @@ handling a very common situation in Java. But they are very specialized.</p></se
 a monad</a> (though <a href="https://developer.atlassian.com/blog/2015/08/optional-broken/">not
 <em>entirely</em> pure</a>) there is much, much more that you can do with it.</p></section>
 <section><p><code>Optional</code> is great if you treat it as a monad instead of simply a
-null-wrapper (i.e., you should almost never call <code>.isPresent()</code> and <code>.get()</code>).</p></section>
+null-wrapper (i.e., you should almost never call <code>.isPresent()</code> and <code>.get()</code>).</p>
+<p><a href="http://reversecoding.net/java-8-optional-replace-get-examples/" class="bare">http://reversecoding.net/java-8-optional-replace-get-examples/</a></p></section>
 <section><h2>Misc JDK8</h2><ul><li><span class="primary">Default interface methods allowed adding a lot of extremely useful functions
 to the standard JDK classes without breaking everyone</span><ul><li><span class="primary">e.g., <code>Collection.stream()</code></span></li></ul></li><li><span class="primary"><code>java.util.Map</code> added a lot of great methods, such as <code>getOrDefault(..)</code>,
 <code>putIfAbsent(..)</code>, <code>computeIfPresent(..)</code>, etc.</span></li><li><span class="primary"><a href="http://www.mscharhag.com/java/java-8-date-time-api">The new DateTime API
